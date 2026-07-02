@@ -1,0 +1,43 @@
+workflows:
+  gymox-android:
+    name: Gymox Android Build
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        SUPABASE_URL: https://tbopxglqajefjkkkkktu.supabase.co
+        SUPABASE_ANON_KEY: sb_publishable_wbcJPe2Mi2GhQPUlvOgCRg_aVZQmDpA
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - $HOME/.gradle/caches
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Prepare .env
+        script: |
+          echo "SUPABASE_URL=$SUPABASE_URL" > .env
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+      - name: Get dependencies
+        script: flutter pub get
+      - name: Analyze code
+        script: flutter analyze
+      - name: Build Android APK
+        script: flutter build apk --debug
+      - name: Build Android App Bundle
+        script: flutter build appbundle --release
+    artifacts:
+      - build/**/outputs/apk/**/*.apk
+      - build/**/outputs/bundle/**/*.aab
+      - flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - dev@gymox.app
